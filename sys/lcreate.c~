@@ -22,7 +22,7 @@ SYSCALL lcreate()
 		restore(ps);
 		return(SYSERR);
 	}
-  if (isbadsem(lock_id)) {
+  if (isbadlock(lock_id)) {
 		restore(ps);
 		return(SYSERR);
 	}
@@ -41,9 +41,11 @@ LOCAL int newlock()
 
 	for (i=0 ; i<NLOCKS ; i++) {
 		lock_id=nextloc;
+	kprintf ("  %d: acquired lock:\n", lock_id);
 		if (locks_table[lock_id].lock_state==LFREE) {
 			locks_table[lock_id].lock_state = LUSED;
       nextloc = (nextloc+1) % NLOCKS;
+kprintf ("  %d: acquired lock next:\n", nextloc);
 			return(lock_id);
 		}
 	}

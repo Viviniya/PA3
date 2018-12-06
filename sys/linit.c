@@ -1,3 +1,5 @@
+#include <conf.h>
+#include <kernel.h>
 #include <stdio.h>
 #include <proc.h>
 #include <lock.h>
@@ -18,11 +20,12 @@ int linit(){
     int j;
     for (j=0;j<NPROC;j++)
     locks_table[i].process_locked[j]=-1;
-    locks_table[i].head_cirQ=NULL;
-    locks_table[i].tail_cirQ=NULL;
+   // locks_table[i].head_cirQ=NULL;
+  //  locks_table[i].tail_cirQ=NULL;
     locks_table[i].lock_priority=-1;
-    locks_table[i].process_list=NULL;
+  //  locks_table[i].process_list=NULL;
     //locks_table[i].wait_list=NULL;
+	locks_table[i].valid=-1;
   }
   restore(ps);
   return OK;

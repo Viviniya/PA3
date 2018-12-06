@@ -13,7 +13,7 @@
 #include <q.h>
 #include <io.h>
 #include <stdio.h>
-
+#include <lock.h>
 /*#define DETAIL */
 #define HOLESIZE	(600)	
 #define	HOLESTART	(640 * 1024)
@@ -39,7 +39,8 @@ struct	mblock	memlist;	/* list of free memory blocks		*/
 #ifdef	Ntty
 struct  tty     tty[Ntty];	/* SLU buffers and mode control		*/
 #endif
-
+struct	lentry	locks_table[NLOCKS];
+int	nextloc =0;
 /* active system status */
 int	numproc;		/* number of live user processes	*/
 int	currpid;		/* id of currently running process	*/
@@ -197,7 +198,7 @@ LOCAL int sysinit()
 	    init_dev(i);
 	}
 #endif
-
+	linit();
 	return(OK);
 }
 

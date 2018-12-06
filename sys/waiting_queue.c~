@@ -6,7 +6,7 @@
 
 
 
-void init_data(lqueue *framed,int ldes1, int  type,  int priority) {
+void init_data(struct lqueue *framed,int ldes1, int  type,  int priority) {
     STATWORD ps;
     disable(ps);
     kprintf("Enqueued init_data(): %d \n",currpid );
@@ -25,10 +25,10 @@ void enqueue_c(int ldes1, int  type,  int priority,struct lqueue *head_cirQ, str
     disable(ps);
     int sizeQueue=sizeof (struct lqueue);
     struct lqueue *framed = (struct lqueue*) getmem(sizeQueue);
-    init_data(&framed, ldes1,   type,   priority);
-    if (head_cirQ == NULL ) {
+    init_data(framed, ldes1,   type,   priority);
+    if (lock_table[ldes1].valid == -1 ) {
     kprintf("Enqueued first call: %d \n",ldes1 );
-        head_cirQ = *tail_cirQ= framed;
+        head_cirQ = tail_cirQ= framed;
     } else {
         tail_cirQ->next = framed;
         tail_cirQ = framed;
@@ -39,31 +39,30 @@ void enqueue_c(int ldes1, int  type,  int priority,struct lqueue *head_cirQ, str
     restore(ps);
 }
 
-void delete_fromQ_withID(int pid, struct lqueue *head_cirQ){
+void delete_fromQ_withID(int pid, struct lqueue *head_cirQ, int lock){
   int sizeQueue=sizeof (struct lqueue);
   int loop=1;
-  if (*head_cirQ == NULL) {
+  if (locks_table[lock].valid == -1) {
     return SYSERR;
   }
   struct lqueue *current = (struct lqueue*) getmem(sizeQueue);
   struct lqueue *previous = (struct lqueue*) getmem(sizeQueue);
   while(loop !=0){
 	kprintf("delete_deomQ: %d \n",pid );
-      current= *head_cirQ;
-      if(framed->pid  == pid){
+      current= head_cirQ;
+      if(current->pid  == pid){
           if(previous == NULL){
           head_cirQ= head_cirQ->next;
-          freemem(current, sizeQueue);
-          freemem(previous, sizeQueue);
+       //   freemem(current, sizeQueue);
+        //  freemem(previous, sizeQueue);
 
           return OK;
         }
         else{
             current = current->next;
             previous->next=current;
-            freemem(current, sizeQueue);
-            freemem(previous, sizeQueue);
-
+         //   freemem(current, sizeQueue);
+         //   freemem(previous, sizeQueue);
             return OK;
       }
     }

@@ -4,7 +4,7 @@
 #include <kernel.h>
 #include <proc.h>
 #include <q.h>
-
+#include <lock.h>
 unsigned long currSP;	/* REAL sp of current process */
 extern int ctxsw(int, int, int, int);
 /*-----------------------------------------------------------------------
@@ -23,7 +23,7 @@ int resched()
 	/* no switch needed if current process priority higher than any pid(pinh or pprio) in queue*/
 	int pid= return_max_pinh();
 	if ( ( (optr= &proctab[currpid])->pstate == PRCURR) &&
-	   (pid == currpid) {
+	   (pid == currpid) ){
 		return(OK);
 	}
 
@@ -58,7 +58,7 @@ int return_max_pinh(){
 	else
 		curprio=proctab[currpid].pprio;
 		int pid = currpid;
-	while (q[next])	{
+	while (q[next].qnext>0)	{
 		 kprintf("output pid=%d\n", next);
 		 if(proctab[next].pinh!=0){
 			  if(curprio < proctab[next].pinh){

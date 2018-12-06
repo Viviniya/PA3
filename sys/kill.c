@@ -8,7 +8,7 @@
 #include <io.h>
 #include <q.h>
 #include <stdio.h>
-
+#include <lock.h>
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system
  *------------------------------------------------------------------------
@@ -67,7 +67,7 @@ SYSCALL kill(int pid)
 
 int adjust_priority(pid){
 	int ldes1=proctab[pid].waiting_in_lock;
-	int result= delete_fromQ_withID(pid,&locks_table[ldes1].head_cirQ); // deleted the process from wait queue
+	int result= delete_fromQ_withID(pid,&locks_table[ldes1].head_cirQ,ldes1); // deleted the process from wait queue
 	if(result == SYSERR){
 		return result;
 	}
@@ -75,16 +75,16 @@ int adjust_priority(pid){
 		return OK;
 	int pid_priority=0;
 		//Find max priority
-	if(locks_table[ldes1].process_list != NULL){
-		struct	lqueue	*lque= locks_table[ldes1].process_list;
+	if(locks_table[ldes1].valid != -1){
+		struct	lqueue	*lque= &locks_table[ldes1].process_list;
 
 		while( lque != NULL)
 		 {
-				int pid =lque.pid;
+				int pid =lque->pid;
 				if(proctab[pid].pprio>pid_priority){
 					 pid_priority=proctab[pid].pprio;
 				}
-				lque= lque.next;
+				lque= lque->next;
 		 }
 	}
 	locks_table[ldes1].max_process_priority=pid_priority;
@@ -93,7 +93,7 @@ int adjust_priority(pid){
 
 }
 void revert_inherit_priority(int ldes1,int pid_priority){
-
+	int i;
   for(i=0;i<NPROC;i++){
     if(  locks_table[ldes1].process_locked[i] == LOCKED){
         if(pid_priority<proctab[i].pinh){

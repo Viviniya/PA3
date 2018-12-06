@@ -22,14 +22,14 @@ SYSCALL ldelete(int lock_id)
 	}
 	lptr = &locks_table[lock_id];
 	lptr->lock_state = LFREE;
-	if (lptr->process_list != NULL) {
-    struct	lqueue	*lque= lptr->process_list;
+	if (lptr->valid != -1) {
+    struct lqueue	*lque= &lptr->process_list;
 		while( lque != NULL)
 		  {
-        pid=lque.pid;
+        pid=lque->pid;
 		    proctab[pid].pwaitret = DELETED;
 		    ready(pid,RESCHNO);
-        lque= lque.next;
+        lque= lque->next;
 		  }
 		resched();
 	}
