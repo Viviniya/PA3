@@ -42,11 +42,15 @@ struct	lentry	{		/* lock table entry		*/
   struct	lqueue process_list;
   struct	lqueue head_cirQ;
   struct	lqueue tail_cirQ;
+	int valid;
 
 };
 extern	struct	lentry	locks_table[];
 extern	int	nextloc;
-
+extern unsigned long ctr1000;
+extern int adjust_priority( int pid);
+extern int release_held_locks(int pid);
+extern int reset_locks(int pid);
 #define	isbadlock(l)	(l<0 || l>=NLOCKS)
 
 #endif

@@ -16,7 +16,9 @@
 #define	FDFREE		-1		/* free file descriptor */
 #define PRFREE		'\002'          /* process slot is free         */
 
-
+#ifndef	NLOCKS
+#define	NLOCKS		50	/* number of locks, if not defined	*/
+#endif
 /* process state constants */
 
 #define	PRCURR		'\001'		/* process is currently running	*/
@@ -60,9 +62,9 @@ struct	pentry	{
 	int	fildes[_NFILE];		/* file - device translation	*/
 	int	ppagedev;		/* pageing dgram device		*/
 	int	pwaitret;
-	unsigned int pinh : 0;
+	unsigned int pinh ;
 	int lock_details[NLOCKS];
-	unsigned int waiting_in_lock :-1;
+	unsigned int waiting_in_lock ;
 };
 
 
