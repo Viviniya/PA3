@@ -15,7 +15,7 @@
  */
 SYSCALL kill(int pid)
 {
-	STATWORD ps;    
+	STATWORD ps;
 	struct	pentry	*pptr;		/* points to proc. table for pid*/
 	int	dev;
 
@@ -36,20 +36,25 @@ SYSCALL kill(int pid)
 	dev = pptr->ppagedev;
 	if (! isbaddev(dev) )
 		close(dev);
-	
+
 	send(pptr->pnxtkin, pid);
 
 	freestk(pptr->pbase, pptr->pstklen);
 	switch (pptr->pstate) {
 
 	case PRCURR:	pptr->pstate = PRFREE;	/* suicide */
-			resched();
+								if(proctab[pid].waiting_in_lock!=-1)
+								adjust_priority(pid);
+								resched();
+
 
 	case PRWAIT:	semaph[pptr->psem].semcnt++;
 
 	case PRREADY:	dequeue(pid);
-			pptr->pstate = PRFREE;
-			break;
+								pptr->pstate = PRFREE;
+									if(proctab[pid].waiting_in_lock!=-1)
+										adjust_priority(pid);
+									break;
 
 	case PRSLEEP:
 	case PRTRECV:	unsleep(pid);
@@ -58,4 +63,42 @@ SYSCALL kill(int pid)
 	}
 	restore(ps);
 	return(OK);
+}
+
+int adjust_priority(pid){
+	int ldes1=proctab[pid].waiting_in_lock;
+	int result= delete_fromQ_withID(pid,&locks_table[ldes1].head_cirQ); // deleted the process from wait queue
+	if(result == SYSERR){
+		return result;
+	}
+	if(proctab[pid].pprio<locks_table[ldes1].max_process_priority)
+		return OK;
+	int pid_priority=0;
+		//Find max priority
+	if(locks_table[ldes1].process_list != NULL){
+		struct	lqueue	*lque= locks_table[ldes1].process_list;
+
+		while( lque != NULL)
+		 {
+				int pid =lque.pid;
+				if(proctab[pid].pprio>pid_priority){
+					 pid_priority=proctab[pid].pprio;
+				}
+				lque= lque.next;
+		 }
+	}
+	locks_table[ldes1].max_process_priority=pid_priority;
+	revert_inherit_priority(ldes1,pid_priority);
+	return OK;
+
+}
+void revert_inherit_priority(int ldes1,int pid_priority){
+
+  for(i=0;i<NPROC;i++){
+    if(  locks_table[ldes1].process_locked[i] == LOCKED){
+        if(pid_priority<proctab[i].pinh){
+            proctab[i].pinh=pid_priority;
+        }
+    }
+  }
 }
