@@ -60,8 +60,9 @@ struct	pentry	{
 	int	fildes[_NFILE];		/* file - device translation	*/
 	int	ppagedev;		/* pageing dgram device		*/
 	int	pwaitret;
-	int pinh;
+	unsigned int pinh : 0;
 	int lock_details[NLOCKS];
+	unsigned int waiting_in_lock :-1;
 };
 
 
