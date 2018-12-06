@@ -16,6 +16,9 @@
 #define	LOCKED	1	/* this lock is free		*/
 #define	WAITING	2		/* this lock is used		*/
 
+#ifndef	NPROC				/* set the number of processes	*/
+#define	NPROC		30		/*  allowed if not already done	*/
+#endif
 
 struct	lqueue	{
 	int	pid;
@@ -37,6 +40,8 @@ struct	lentry	{		/* lock table entry		*/
   int max_process_priority;
   int process_locked[NPROC];
   struct	lqueue process_list;
+  struct	lqueue head_cirQ;
+  struct	lqueue tail_cirQ;
 
 };
 extern	struct	lentry	locks_table[];
