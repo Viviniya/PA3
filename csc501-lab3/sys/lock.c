@@ -29,10 +29,17 @@ int lock (int ldes1, int type, int priority){
       return(SYSERR);
     }
     if(lock_type == WRITE && type == WRITE){
+      if(proctab[currpid].waiting_in_lock!= -1)
+      {
+        restore(ps);
+        return(SYSERR);
+      }else{
         wait_lock();
         resched();
-          restore(ps);
-          return(proctab[currpid].pwaitret);
+        restore(ps);
+        return(proctab[currpid].pwaitret);
+      }
+
     }
 
     if(lock_type == READ && type == READ){
@@ -60,29 +67,47 @@ int lock (int ldes1, int type, int priority){
            return(OK);
        }
        else{
-         wait_lock();
-         resched();
+         if(proctab[currpid].waiting_in_lock!= -1)
+         {
+           restore(ps);
+           return(SYSERR);
+         }else{
+           wait_lock();
+           resched();
            restore(ps);
            return(proctab[currpid].pwaitret);
+         }
        }
     }
     if(lock_type == READ && type == WRITE){
-      wait_lock();
-      resched();
+      if(proctab[currpid].waiting_in_lock!= -1)
+      {
+        restore(ps);
+        return(SYSERR);
+      }else{
+        wait_lock();
+        resched();
         restore(ps);
         return(proctab[currpid].pwaitret);
+      }
 
     }
     if(lock_type == WRITE && type == READ){
-      wait_lock();
-      resched();
+      if(proctab[currpid].waiting_in_lock!= -1)
+      {
+        restore(ps);
+        return(SYSERR);
+      }else{
+        wait_lock();
+        resched();
         restore(ps);
         return(proctab[currpid].pwaitret);
+      }
 
     }
 }
 void  acquire_lock(int ldes1, int  type,  int priority){
-  proctab[currpid].lock_details[currpid] = LOCKED;
+  proctab[currpid].lock_details[ldes1] = LOCKED;
   locks_table[ldes1].lock_count++;
   if(type==READ)
   locks_table[ldes1].num_reader++;
@@ -120,27 +145,29 @@ void  acquire_lock(int ldes1, int  type,  int priority){
   }
 }
 void  wait_lock(int ldes1, int  type,  int priority){
+  proctab[currpid].waiting_in_lock=ldes1;
   if(type ==READ)
     locks_table[ldes1].reader_waiting++;
   if(type ==WRITE)
     locks_table[ldes1].writer_waiting++;
   locks_table[ldes1].lock_type=type;
   locks_table[ldes1].lock_priority=priority;
-  enqueue_c(ldes1,   type,   priority);
-
+  enqueue_c(ldes1,   type,   priority,&locks_table[ldes1].head_cirQ,&locks_table[ldes1].tail_cirQ);
+  inherit_priority( ldes1);
   proctab[currpid].pwaitret= PRWAIT;
 
 }
-
-void inherit_priority(){
+//If a process is going to be added to waitlist, its priority if >
+//than process currently holding the locks, their priority should be upgraded
+void inherit_priority(int ldes1){
   int i;
   int maxp=proctab[currpid].pprio;
   for(i=0;i<NPROC;i++){
-    if(process_locked[i] == LOCKED){
+    if(  locks_table[ldes1].process_locked[i] == LOCKED){
         if(proctab[currpid].pprio>proctab[i].pprio){
-          
+            proctab[i].pinh=maxp;
+            locks_table[ldes1].max_process_priority=maxp;
         }
-
     }
   }
 }
